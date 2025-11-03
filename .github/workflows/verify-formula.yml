@@ -1,0 +1,36 @@
+name: Verify Homebrew Formula
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Formula/omega-lang.rb'
+
+jobs:
+  verify:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout tap repo
+        uses: actions/checkout@v4
+
+      - name: Homebrew info
+        run: |
+          brew --version
+          brew doctor || true
+
+      - name: Audit formula (non-blocking)
+        run: |
+          brew audit --strict --online ./Formula/omega-lang.rb || true
+
+      - name: Build from source
+        run: |
+          brew install --build-from-source ./Formula/omega-lang.rb
+
+      - name: Run formula tests
+        run: |
+          brew test omega-lang
+
+      - name: Uninstall
+        if: always()
+        run: |
+          brew uninstall --force omega-lang || true
