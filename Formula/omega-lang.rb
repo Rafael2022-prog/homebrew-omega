@@ -1,43 +1,30 @@
 class OmegaLang < Formula
   desc "Universal blockchain programming language - Write Once, Deploy Everywhere"
   homepage "https://github.com/Rafael2022-prog/omega-lang"
-  url "https://github.com/Rafael2022-prog/omega-lang/archive/refs/tags/v1.2.0.tar.gz"
-  sha256 "PLACEHOLDER_SHA256_HASH"
+  url "https://github.com/Rafael2022-prog/omega-lang/archive/refs/tags/v1.2.1.tar.gz"
+  sha256 "2f205aa5c4f6025eff143d1c8c850194459dcf11f45deb990b26525b07e40c7c"
   license "MIT"
-  version "1.2.0"
+  version "1.2.1"
 
-  depends_on "rust" => :build
-  depends_on "node" => :build
   depends_on "make" => :build
+  depends_on "node" => :build
 
   def install
-    # Build OMEGA compiler from source
-    system "cargo", "build", "--release", "--bin", "omega"
+    # Build OMEGA using native .mega compiler
+    system "make", "build"
     
-    # Install main binary
-    bin.install "target/release/omega"
+    # Install binary
+    bin.install "omega"
     
     # Install standard library
     (lib/"omega").install Dir["src/std/*"]
     
-    # Install examples and templates
+    # Install examples and documentation
     (share/"omega/examples").install Dir["examples/*"]
-    (share/"omega/contracts").install Dir["contracts/*"]
-    
-    # Install documentation
-    (share/"doc/omega").install "README.md"
-    (share/"doc/omega").install "LANGUAGE_SPECIFICATION.md"
-    (share/"doc/omega").install "COMPILER_ARCHITECTURE.md"
     (share/"doc/omega").install Dir["docs/*"]
     
-    # Install man pages (if available)
-    # man1.install "docs/omega.1" if File.exist?("docs/omega.1")
-    
-    # Create configuration directory
-    (etc/"omega").mkpath
-    
-    # Install default configuration
-    (etc/"omega").install "omega.toml" if File.exist?("omega.toml")
+    # Install configuration files
+    (etc/"omega").install "omega.toml"
   end
 
   def post_install

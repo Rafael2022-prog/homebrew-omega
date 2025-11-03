@@ -33,7 +33,7 @@ brew install --build-from-source ./Formula/omega-lang.rb
 
 - **macOS**: 10.15+ (Catalina or later)
 - **Linux**: Ubuntu 18.04+, CentOS 7+, or equivalent
-- **Dependencies**: Rust, Node.js, Make (automatically installed by Homebrew)
+- **Dependencies**: Make (automatically installed by Homebrew). Node.js optional (for IDE/LSP). No Rust dependency.
 
 ## ✅ Verification
 
@@ -148,6 +148,6 @@ Contributions are welcome! Please:
 
 ---
 
-**Created for OMEGA Language v1.2.0+**
+**Created for OMEGA Language v1.2.1+**
 
 *"Bridging blockchain ecosystems, one brew at a time."* 🍺⛓️

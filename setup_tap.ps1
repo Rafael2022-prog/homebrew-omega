@@ -161,7 +161,7 @@ git status
 Write-Host "💾 Creating initial commit..." -ForegroundColor Yellow
 git commit -m "Initial OMEGA Homebrew tap
 
-- Add omega-lang.rb formula for OMEGA v1.2.0
+- Add omega-lang.rb formula for OMEGA v1.2.1
 - Include comprehensive installation and configuration
 - Add update script for formula maintenance
 - Include documentation and setup instructions
@@ -178,7 +178,7 @@ Write-Host "   git remote add origin https://github.com/$GitHubUser/$TapName.git
 Write-Host "3. Push to GitHub:" -ForegroundColor White
 Write-Host "   git push -u origin main" -ForegroundColor Gray
 Write-Host "4. Update formula hash:" -ForegroundColor White
-Write-Host "   ./update_formula_hash.ps1 -Version '1.2.0'" -ForegroundColor Gray
+Write-Host "   ./update_formula_hash.ps1 -Version '1.2.1'" -ForegroundColor Gray
 Write-Host "5. Test installation:" -ForegroundColor White
 Write-Host "   brew tap $GitHubUser/omega-lang" -ForegroundColor Gray
 Write-Host "   brew install omega-lang" -ForegroundColor Gray
