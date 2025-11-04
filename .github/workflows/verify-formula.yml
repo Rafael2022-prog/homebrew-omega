@@ -20,11 +20,11 @@ jobs:
 
       - name: Audit formula (non-blocking)
         run: |
-          brew audit --strict --online ./Formula/omega-lang.rb || true
+          brew audit --strict --online omega-lang || true
 
       - name: Build from source
         run: |
-          brew install --build-from-source ./Formula/omega-lang.rb
+          brew install --build-from-source omega-lang
 
       - name: Run formula tests
         run: |
