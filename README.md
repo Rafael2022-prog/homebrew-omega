@@ -7,7 +7,7 @@ Official Homebrew tap for [OMEGA Language](https://github.com/Rafael2022-prog/om
 ### Method 1: Direct Installation (Recommended)
 ```bash
 # Add the tap
-brew tap Rafael2022-prog/omega-lang
+brew tap Rafael2022-prog/homebrew-omega
 
 # Install OMEGA
 brew install omega-lang
@@ -16,23 +16,38 @@ brew install omega-lang
 ### Method 2: Install from URL
 ```bash
 # Install directly from formula URL
-brew install https://raw.githubusercontent.com/Rafael2022-prog/homebrew-omega-lang/main/Formula/omega-lang.rb
+brew install https://raw.githubusercontent.com/Rafael2022-prog/homebrew-omega/main/Formula/omega-lang.rb
 ```
 
 ### Method 3: Build from Source
 ```bash
 # Clone this repository
-git clone https://github.com/Rafael2022-prog/homebrew-omega-lang.git
-cd homebrew-omega-lang
+git clone https://github.com/Rafael2022-prog/homebrew-omega.git
+cd homebrew-omega
 
-# Install from local formula
-brew install --build-from-source ./Formula/omega-lang.rb
+# Ensure the tap is added (so the formula can be found by name)
+brew tap Rafael2022-prog/homebrew-omega
+
+# Install from formula by name, building from source
+brew install --build-from-source omega-lang
+```
+
+## ℹ️ macOS Bootstrap (Temporary)
+
+This tap currently installs a temporary bootstrap binary for macOS to enable basic commands while native macOS builds are being prepared.
+- Supported: Apple Silicon (arm64). Intel (x86_64) support is planned.
+- Provides: `omega --version`, `omega build`, `omega test` basic behavior for verification.
+- Upcoming: Replace bootstrap with a real native binary in the next releases.
+
+If Homebrew cannot find the formula (e.g., suggests `omegat`), make sure you have tapped this repository:
+```bash
+brew tap Rafael2022-prog/homebrew-omega
 ```
 
 ## 📋 Requirements
 
 - **macOS**: 10.15+ (Catalina or later)
-- **Linux**: Ubuntu 18.04+, CentOS 7+, or equivalent
+- **Linux**: Not yet supported via this tap (native builds planned).
 - **Dependencies**: Make (automatically installed by Homebrew). Node.js optional (for IDE/LSP). No Rust dependency.
 
 ## ✅ Verification
@@ -80,7 +95,7 @@ After installation, documentation is available at:
 2. **Test the formula**:
    ```bash
    # Test installation
-   brew install --build-from-source ./Formula/omega-lang.rb
+   brew install --build-from-source omega-lang
    
    # Test functionality
    brew test omega-lang
@@ -125,7 +140,7 @@ brew test omega-lang
 brew uninstall omega-lang
 
 # Remove the tap (optional)
-brew untap Rafael2022-prog/omega-lang
+brew untap Rafael2022-prog/homebrew-omega
 ```
 
 ## 📞 Support
