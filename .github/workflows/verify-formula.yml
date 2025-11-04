@@ -13,6 +13,10 @@ jobs:
       - name: Checkout tap repo
         uses: actions/checkout@v4
 
+      - name: Set up tap
+        run: |
+          brew tap Rafael2022-prog/homebrew-omega https://github.com/Rafael2022-prog/homebrew-omega
+
       - name: Homebrew info
         run: |
           brew --version
