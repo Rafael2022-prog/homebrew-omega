@@ -10,7 +10,10 @@ on:
         required: true
         default: '1.2.1'
       archive_url:
-        description: 'Archive URL'
+        description: 'Archive URL (source tar.gz)'
+        required: false
+      bootstrap_url_arm64:
+        description: 'Bootstrap asset URL for macOS arm64'
         required: false
 
 jobs:
@@ -27,36 +30,59 @@ jobs:
       run: |
         echo "VERSION=${{ github.event.inputs.version || github.event.client_payload.version }}" >> $GITHUB_ENV
         echo "ARCHIVE_URL=${{ github.event.inputs.archive_url || github.event.client_payload.archive_url }}" >> $GITHUB_ENV
+        echo "BOOTSTRAP_URL_ARM64=${{ github.event.inputs.bootstrap_url_arm64 || github.event.client_payload.bootstrap_url_arm64 }}" >> $GITHUB_ENV
         
-    - name: Download and calculate hash
+    - name: Download and calculate hashes
       run: |
-        # Set default URL if not provided
+        set -e
+        
+        # Set default source archive URL if not provided
         if [ -z "$ARCHIVE_URL" ]; then
           ARCHIVE_URL="https://github.com/Rafael2022-prog/omega-lang/archive/refs/tags/v${VERSION}.tar.gz"
         fi
-        
-        echo "Downloading: $ARCHIVE_URL"
+        echo "Downloading source archive: $ARCHIVE_URL"
         curl -L -o omega-${VERSION}.tar.gz "$ARCHIVE_URL"
         
-        # Calculate SHA256
-        SHA256=$(sha256sum omega-${VERSION}.tar.gz | cut -d' ' -f1)
-        echo "SHA256: $SHA256"
+        # Calculate SHA256 for source archive
+        SRC_SHA256=$(sha256sum omega-${VERSION}.tar.gz | cut -d' ' -f1)
+        echo "SRC_SHA256: $SRC_SHA256"
+        echo "SRC_SHA256=$SRC_SHA256" >> $GITHUB_ENV
         
-        # Store in environment
-        echo "ARCHIVE_URL=$ARCHIVE_URL" >> $GITHUB_ENV
-        echo "SHA256=$SHA256" >> $GITHUB_ENV
+        # Set default bootstrap URL for macOS arm64 if not provided
+        if [ -z "$BOOTSTRAP_URL_ARM64" ]; then
+          BOOTSTRAP_URL_ARM64="https://github.com/Rafael2022-prog/omega-lang/releases/download/v${VERSION}/omega-darwin-arm64.zip"
+        fi
+        echo "Downloading bootstrap asset (arm64): $BOOTSTRAP_URL_ARM64"
+        curl -L -o omega-darwin-arm64.zip "$BOOTSTRAP_URL_ARM64"
+        
+        # Calculate SHA256 for bootstrap asset
+        BOOTSTRAP_SHA_ARM64=$(sha256sum omega-darwin-arm64.zip | cut -d' ' -f1)
+        echo "BOOTSTRAP_SHA_ARM64: $BOOTSTRAP_SHA_ARM64"
+        echo "BOOTSTRAP_URL_ARM64=$BOOTSTRAP_URL_ARM64" >> $GITHUB_ENV
+        echo "BOOTSTRAP_SHA_ARM64=$BOOTSTRAP_SHA_ARM64" >> $GITHUB_ENV
         
     - name: Update formula
       run: |
-        # Update the formula file
-        sed -i "s|url \".*\"|url \"$ARCHIVE_URL\"|g" Formula/omega-lang.rb
-        sed -i "s|sha256 \".*\"|sha256 \"$SHA256\"|g" Formula/omega-lang.rb
-        sed -i "s|version \".*\"|version \"$VERSION\"|g" Formula/omega-lang.rb
+        set -e
+        
+        # Update top-level metadata
+        sed -i "s|^\s*url \".*\"|  url \"$ARCHIVE_URL\"|g" Formula/omega-lang.rb
+        sed -i "s|^\s*sha256 \".*\"|  sha256 \"$SRC_SHA256\"|g" Formula/omega-lang.rb
+        sed -i "s|^\s*version \".*\"|  version \"$VERSION\"|g" Formula/omega-lang.rb
+        
+        # Update macOS bootstrap resource inside on_macos block
+        sed -i "/on_macos/,/end/s|url \".*omega-darwin.*\"|url \"$BOOTSTRAP_URL_ARM64\"|g" Formula/omega-lang.rb
+        sed -i "/on_macos/,/end/s|sha256 \".*\"|sha256 \"$BOOTSTRAP_SHA_ARM64\"|g" Formula/omega-lang.rb
         
         echo "Formula updated:"
         echo "- Version: $VERSION"
-        echo "- URL: $ARCHIVE_URL"
-        echo "- SHA256: $SHA256"
+        echo "- Source URL: $ARCHIVE_URL"
+        echo "- Source SHA256: $SRC_SHA256"
+        echo "- macOS arm64 bootstrap: $BOOTSTRAP_URL_ARM64"
+        echo "- macOS arm64 SHA256: $BOOTSTRAP_SHA_ARM64"
+        
+        echo "\nDiff preview (first 50 lines):"
+        head -n 50 Formula/omega-lang.rb
         
     - name: Validate formula
       run: |
@@ -65,7 +91,7 @@ jobs:
         echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         
-        # Audit the formula (path-based audit is acceptable here in CI)
+        # Audit the formula (path-based audit acceptable in tap CI)
         brew audit --strict Formula/omega-lang.rb || echo "Audit completed with warnings"
         
     - name: Commit and push changes
@@ -77,8 +103,10 @@ jobs:
         git commit -m "Update OMEGA to v$VERSION
 
         - Update version to $VERSION
-        - Update archive URL: $ARCHIVE_URL
-        - Update SHA256 hash: $SHA256
+        - Update source archive URL: $ARCHIVE_URL
+        - Update source SHA256: $SRC_SHA256
+        - Update macOS arm64 bootstrap URL: $BOOTSTRAP_URL_ARM64
+        - Update macOS arm64 bootstrap SHA256: $BOOTSTRAP_SHA_ARM64
         - Automated update via GitHub Actions"
         
         git push
@@ -90,7 +118,8 @@ jobs:
         
         ## Changes
         - Updated OMEGA Language to version $VERSION
-        - Updated archive URL and SHA256 hash
+        - Updated source archive URL and SHA256 hash
+        - Updated macOS arm64 bootstrap asset URL and SHA256 hash
         - Validated formula syntax and dependencies
         
         ## Installation
@@ -105,10 +134,13 @@ jobs:
         # Should output: OMEGA Language v$VERSION
         \`\`\`
         
-        ## Archive Details
+        ## Source Archive
         - **URL**: $ARCHIVE_URL
-        - **SHA256**: \`$SHA256\`
-        - **Size**: $(ls -lh omega-${VERSION}.tar.gz | awk '{print $5}')
+        - **SHA256**: \`$SRC_SHA256\`
+        
+        ## macOS Bootstrap (arm64)
+        - **URL**: $BOOTSTRAP_URL_ARM64
+        - **SHA256**: \`$BOOTSTRAP_SHA_ARM64\`
         
         ---
         
@@ -122,8 +154,10 @@ jobs:
       run: |
         echo "✅ Homebrew formula updated successfully!"
         echo "📦 Version: $VERSION"
-        echo "🔗 Archive: $ARCHIVE_URL"
-        echo "🔐 SHA256: $SHA256"
+        echo "🔗 Source archive: $ARCHIVE_URL"
+        echo "🔐 Source SHA256: $SRC_SHA256"
+        echo "🍏 Bootstrap (arm64): $BOOTSTRAP_URL_ARM64"
+        echo "🔐 Bootstrap SHA256: $BOOTSTRAP_SHA_ARM64"
         echo ""
         echo "🍺 Users can now install with:"
         echo "   brew tap Rafael2022-prog/homebrew-omega"
