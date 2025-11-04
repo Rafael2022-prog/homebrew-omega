@@ -9,20 +9,42 @@ class OmegaLang < Formula
   depends_on "make" => :build
   depends_on "node" => :build
 
+  # macOS bootstrap resource to enable installation without native compiler present
+  on_macos do
+    if Hardware::CPU.arm?
+      resource "omega-bootstrap" do
+        url "https://github.com/Rafael2022-prog/omega-lang/releases/download/v1.2.1/omega-darwin-arm64.zip"
+        sha256 "1c685d9dc408e5637a9ad1856a64c595cb17294581b687c2c9a2ef65887e26b3"
+      end
+    else
+      # fallback to arm64 asset if x86_64 is not provided yet
+      resource "omega-bootstrap" do
+        url "https://github.com/Rafael2022-prog/omega-lang/releases/download/v1.2.1/omega-darwin-arm64.zip"
+        sha256 "1c685d9dc408e5637a9ad1856a64c595cb17294581b687c2c9a2ef65887e26b3"
+      end
+    end
+  end
+
   def install
-    # Build OMEGA using native .mega compiler
-    system "make", "build"
-    
-    # Install binary
-    bin.install "omega"
-    
+    if OS.mac?
+      # Install bootstrap binary directly on macOS
+      resource("omega-bootstrap").stage do
+        chmod "+x", "omega"
+        bin.install "omega"
+      end
+    else
+      # Build OMEGA using native .mega compiler on non-macOS systems
+      system "make", "build"
+      bin.install "omega"
+    end
+
     # Install standard library
     (lib/"omega").install Dir["src/std/*"]
-    
+
     # Install examples and documentation
     (share/"omega/examples").install Dir["examples/*"]
     (share/"doc/omega").install Dir["docs/*"]
-    
+
     # Install configuration files
     (etc/"omega").install "omega.toml"
   end
@@ -30,7 +52,7 @@ class OmegaLang < Formula
   def post_install
     # Create user configuration directory
     (var/"omega").mkpath
-    
+
     # Set up initial configuration if it doesn't exist
     unless (etc/"omega/omega.toml").exist?
       (etc/"omega/omega.toml").write <<~EOS
@@ -59,7 +81,7 @@ class OmegaLang < Formula
     # Test basic functionality
     system "#{bin}/omega", "--version"
     
-    # Test compilation of a simple contract
+    # Test compilation of a simple contract (simulated by bootstrap)
     (testpath/"test.omega").write <<~EOS
       blockchain SimpleTest {
           state {
@@ -76,7 +98,7 @@ class OmegaLang < Formula
       }
     EOS
     
-    # Test compilation
+    # Test compilation (bootstrap creates build directory)
     system "#{bin}/omega", "build", "test.omega"
     
     # Verify output files exist
